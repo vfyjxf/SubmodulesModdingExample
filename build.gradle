@@ -1,3 +1,120 @@
-plugins{
+plugins {
     id 'net.neoforged.moddev' version '2.0.88' apply false
+}
+
+allprojects {
+    repositories {
+        mavenLocal()
+    }
+    dependencies {
+        //global  dependencies
+    }
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+    }
+}
+
+def base = ["SubmoduleCommon", "SubmoduleGather"]
+def common = project(":SubmoduleCommon")
+subprojects { Project p ->
+    if (p.name in base) return
+
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
+    apply plugin: 'net.neoforged.moddev'
+
+    version = p.mod_version
+    group = p.mod_group_id
+
+    java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+    p.base {
+        archivesName = p.mod_id
+    }
+
+    neoForge {
+        version = neo_version
+        parchment {
+            mappingsVersion = project.parchment_mappings_version
+            minecraftVersion = project.parchment_minecraft_version
+        }
+        runs {
+            client {
+                client()
+                systemProperty 'neoforge.enabledGameTestNamespaces', p.mod_id
+            }
+
+            server {
+                server()
+                programArgument '--nogui'
+                systemProperty 'neoforge.enabledGameTestNamespaces', p.mod_id
+            }
+            gameTestServer {
+                type = "gameTestServer"
+                systemProperty 'neoforge.enabledGameTestNamespaces', p.mod_id
+            }
+
+            data {
+                data()
+                // gameDirectory = project.file('run-data')
+                programArguments.addAll '--mod', p.mod_id, '--all', '--output', p.file('src/generated/resources/').getAbsolutePath(), '--existing', p.file('src/main/resources/').getAbsolutePath()
+            }
+
+            configureEach {
+                systemProperty 'forge.logging.markers', 'REGISTRIES'
+                logLevel = org.slf4j.event.Level.DEBUG
+            }
+        }
+        mods {
+            "${p.mod_id}" {
+                sourceSet(sourceSets.main)
+            }
+        }
+    }
+
+    sourceSets.main.resources { srcDir 'src/generated/resources' }
+    configurations {
+        runtimeClasspath.extendsFrom localRuntime
+    }
+
+    dependencies {
+        if (common != null) {
+            implementation(common)
+            //if your common is a internal dependency, you need to add it to the jarJar configuration
+            //jarJar(common)
+        }
+    }
+
+    tasks.withType(ProcessResources).configureEach {
+        var replaceProperties = [
+                minecraft_version      : minecraft_version,
+                minecraft_version_range: minecraft_version_range,
+                neo_version            : neo_version,
+                neo_version_range      : neo_version_range,
+                loader_version_range   : loader_version_range,
+                mod_id                 : p.mod_id,
+                mod_name               : p.mod_name,
+                mod_license            : p.mod_license,
+                mod_version            : p.mod_version,
+                mod_authors            : p.mod_authors,
+                mod_description        : p.mod_description
+        ]
+        inputs.properties replaceProperties
+
+        filesMatching(['META-INF/neoforge.mods.toml']) {
+            expand replaceProperties
+        }
+    }
+
+    publishing {
+        publications {
+            register('mavenJava', MavenPublication) {
+                from components.java
+            }
+        }
+        repositories {
+            maven {
+                url "file://${project.projectDir}/repo"
+            }
+        }
+    }
 }
