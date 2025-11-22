@@ -39,5 +39,9 @@ neoForge {
 
 dependencies {
     implementation(project(":SubmoduleCommon"))
-    implementation(project(":SubmoduleA"))
+    rootProject.subprojects.each {
+        if (it.name != "SubmoduleCommon" && it.name != project.name) {
+            implementation(project(it.path))
+        }
+    }
 }
