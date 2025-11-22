@@ -60,6 +60,8 @@ configurations {
 dependencies {
     if (common != null) {
         implementation(common)
+        //if your common is a internal dependency, you need to add it to the jarJar configuration
+        //jarJar(common)
     }
 }
 
