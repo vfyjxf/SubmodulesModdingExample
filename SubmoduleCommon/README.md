@@ -1,3 +1,3 @@
 # SubmoduleCommon
 
-Share your minecraft artifact and common code
+Share your mod common code
