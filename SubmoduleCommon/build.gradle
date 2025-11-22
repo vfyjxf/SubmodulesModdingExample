@@ -54,7 +54,7 @@ dependencies {
 jar{
     manifest {
         attributes(
-                'FMLType': 'GAMELIBRARY'
+                'FMLModType': 'GAMELIBRARY'
         )
     }
 }
