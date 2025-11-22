@@ -40,4 +40,6 @@ neoForge {
 dependencies {
     implementation(project(":SubmoduleCommon"))
     implementation(project(":SubmoduleA"))
+    implementation(project(":SubmoduleB"))
+    implementation(project(":SubmoduleC"))
 }
