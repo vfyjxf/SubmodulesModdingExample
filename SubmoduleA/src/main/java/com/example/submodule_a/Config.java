@@ -1,4 +1,4 @@
-package com.example.examplemod;
+package com.example.submodule_a;
 
 import java.util.List;
 import java.util.Set;
